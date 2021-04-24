@@ -51,8 +51,11 @@ rwt.qx.Class.define( "rwt.widgets.GC", {
 
   members : {
 
-    init : function( x, y, width, height, font, background, foreground  ) {
-      this._initClipping( x, y, width, height );
+    init : function( x, y, width, height, font, background, foreground, redraw  ) {
+      // 2021-04-24 mvk
+      if( redraw ) {
+         this._initClipping( x, y, width, height );
+      }
       this._initFields( font, background, foreground );
       this._control.dispatchSimpleEvent( "paint" ); // client-side painting on server-side redraw
     },

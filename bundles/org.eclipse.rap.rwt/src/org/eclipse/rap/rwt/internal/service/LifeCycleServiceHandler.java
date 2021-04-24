@@ -42,9 +42,8 @@ import org.eclipse.rap.rwt.service.UISession;
 public class LifeCycleServiceHandler implements ServiceHandler {
 
   private static final String PROP_ERROR = "error";
-  private static final String ATTR_LAST_RESPONSE_MESSAGE
-    = LifeCycleServiceHandler.class.getName() + "#lastResponseMessage";
-
+  private static final String ATTR_LAST_RESPONSE_MESSAGE = LifeCycleServiceHandler.class.getName()
+                                                           + "#lastResponseMessage";
   private final MessageChainReference messageChainReference;
 
   public LifeCycleServiceHandler( MessageChainReference messageChainReference ) {
@@ -112,9 +111,8 @@ public class LifeCycleServiceHandler implements ServiceHandler {
   }
 
   /*
-   * Workaround for bug in certain servlet containers where the reader is sometimes empty.
-   * 411616: Application crash with very long messages
-   * https://bugs.eclipse.org/bugs/show_bug.cgi?id=411616
+   * Workaround for bug in certain servlet containers where the reader is sometimes empty. 411616:
+   * Application crash with very long messages https://bugs.eclipse.org/bugs/show_bug.cgi?id=411616
    */
   private static Reader getReader( HttpServletRequest request ) throws IOException {
     String encoding = request.getCharacterEncoding();
@@ -158,9 +156,8 @@ public class LifeCycleServiceHandler implements ServiceHandler {
     writeError( response, SC_FORBIDDEN, "session timeout" );
   }
 
-  private static void writeError( HttpServletResponse response,
-                                  int statusCode,
-                                  String errorType ) throws IOException
+  private static void writeError( HttpServletResponse response, int statusCode, String errorType )
+    throws IOException
   {
     response.setStatus( statusCode );
     ProtocolMessageWriter writer = new ProtocolMessageWriter();
@@ -180,6 +177,10 @@ public class LifeCycleServiceHandler implements ServiceHandler {
   private static void writeEmptyMessage( ServletResponse response ) throws IOException {
     new ProtocolMessageWriter().createMessage().toJson().writeTo( response.getWriter() );
   }
+  // TODO: 2021-04-23 mvkd
+  // private static ILogger logger = Logger.getLogger( LifeCycleServiceHandler.class );
+// private static String lastMessage = null;
+// private static long lastMessageTime = System.currentTimeMillis();
 
   private static void writeResponseMessage( ResponseMessage responseMessage,
                                             ServletResponse response )
@@ -187,6 +188,25 @@ public class LifeCycleServiceHandler implements ServiceHandler {
   {
     bufferMessage( responseMessage );
     responseMessage.toJson().writeTo( response.getWriter() );
+    // TODO: 2021-04-23 mvkd
+// long time = System.currentTimeMillis();
+// String message = responseMessage.toString();
+// if( lastMessage != null && time - lastMessageTime > 50 ) {
+// lastMessage = null;
+// }
+// if( lastMessage == null || message.equals( lastMessage ) == false ) {
+// // 2021-04-18 mvkd
+// String rm = responseMessage.toString();
+// logger.info( "writeResponseMessage(...): length %d", Integer.valueOf( rm.length() ) );
+// if( rm.length() > 100 ) {
+//// FileWriter fw = new FileWriter( new File( "writeResponceMessage" + time ) );
+//// responseMessage.toJson().writeTo( fw );
+//// fw.close();
+// }
+// }
+// lastMessage = message;
+// lastMessageTime = time;
+//
   }
 
   private static void writeBufferedResponse( HttpServletResponse response ) throws IOException {
@@ -203,5 +223,4 @@ public class LifeCycleServiceHandler implements ServiceHandler {
   private static ResponseMessage getBufferedMessage() {
     return ( ResponseMessage )getUISession().getAttribute( ATTR_LAST_RESPONSE_MESSAGE );
   }
-
 }

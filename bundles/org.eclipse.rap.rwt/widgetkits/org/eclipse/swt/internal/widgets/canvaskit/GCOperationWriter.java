@@ -55,28 +55,30 @@ final class GCOperationWriter {
     this.control = control;
   }
 
-  void initialize() {
+  void initialize( boolean aRedraw ) {
     if( !initialized ) {
       lineWidth = 1;
       foreground = control.getForeground().getRGB();
       background = control.getBackground().getRGB();
       Rectangle paintRect = getPaintRect();
-      JsonObject parameters = new JsonObject()
-        .add( "x", paintRect.x )
+      JsonObject parameters = new JsonObject().add( "x", paintRect.x )
         .add( "y", paintRect.y )
         .add( "width", paintRect.width )
         .add( "height", paintRect.height )
         .add( "font", toJson( control.getFont() ) )
         .add( "fillStyle", toJson( background ) )
-        .add( "strokeStyle", toJson( foreground ) );
+        .add( "strokeStyle", toJson( foreground ) )
+        // 2021-04-24 mvk
+        .add( "redraw", aRedraw );
       getRemoteObject( getGcId( control ) ).call( "init", parameters );
-      operations = new JsonArray();
       initialized = true;
     }
   }
 
   void write( GCOperation operation ) {
-    initialize();
+    if( operations == null ) {
+      operations = new JsonArray();
+    }
     if( operation instanceof DrawLine ) {
       drawLine( ( DrawLine )operation );
     } else if( operation instanceof DrawPoint ) {
@@ -131,9 +133,7 @@ final class GCOperationWriter {
     float x = operation.x;
     float y = operation.y;
     addClientOperation( "save" );
-    operations.add( new JsonArray()
-      .add( "fillStyle" )
-      .add( toJson( foreground ) ) );
+    operations.add( new JsonArray().add( "fillStyle" ).add( toJson( foreground ) ) );
     addClientOperation( "lineWidth", 1 );
     addClientOperation( "beginPath" );
     addClientOperation( "rect", x, y, 1, 1 );
@@ -149,10 +149,12 @@ final class GCOperationWriter {
     float height = operation.height;
     addClientOperation( "beginPath" );
     addClientOperation( "rect", x, y, width, height );
-    addClientOperation( operation.fill ? "fill" : "stroke" );
+    addClientOperation( operation.fill
+                                       ? "fill"
+                                       : "stroke" );
   }
 
-  private void fillGradientRectangle( FillGradientRectangle operation )  {
+  private void fillGradientRectangle( FillGradientRectangle operation ) {
     boolean vertical = operation.vertical;
     float width = operation.width;
     float height = operation.height;
@@ -162,7 +164,7 @@ final class GCOperationWriter {
     if( width < 0 ) {
       x1 += width;
       if( !vertical ) {
-        swapColors  = true;
+        swapColors = true;
       }
     }
     if( height < 0 ) {
@@ -171,20 +173,22 @@ final class GCOperationWriter {
         swapColors = true;
       }
     }
-    RGB startColor = swapColors ? background : foreground;
-    RGB endColor = swapColors ? foreground : background ;
-    float x2 = vertical ? x1 : x1 + Math.abs( width );
-    float y2 = vertical ? y1 + Math.abs( height ) : y1;
+    RGB startColor = swapColors
+                                ? background
+                                : foreground;
+    RGB endColor = swapColors
+                              ? foreground
+                              : background;
+    float x2 = vertical
+                        ? x1
+                        : x1 + Math.abs( width );
+    float y2 = vertical
+                        ? y1 + Math.abs( height )
+                        : y1;
     addClientOperation( "save" );
     addClientOperation( "createLinearGradient", x1, y1, x2, y2 );
-    operations.add( new JsonArray()
-      .add( "addColorStop" )
-      .add( 0 )
-      .add( toJson( startColor ) ) );
-    operations.add( new JsonArray()
-      .add( "addColorStop" )
-      .add( 1 )
-      .add( toJson( endColor ) ) );
+    operations.add( new JsonArray().add( "addColorStop" ).add( 0 ).add( toJson( startColor ) ) );
+    operations.add( new JsonArray().add( "addColorStop" ).add( 1 ).add( toJson( endColor ) ) );
     addClientOperation( "fillStyle", "linearGradient" );
     addClientOperation( "beginPath" );
     addClientOperation( "rect", x1, y1, width, height );
@@ -211,7 +215,9 @@ final class GCOperationWriter {
     addClientOperation( "quadraticCurveTo", x + w, y, x + w - rx, y );
     addClientOperation( "lineTo", x + rx, y );
     addClientOperation( "quadraticCurveTo", x, y, x, y + ry );
-    addClientOperation( operation.fill ? "fill" : "stroke" );
+    addClientOperation( operation.fill
+                                       ? "fill"
+                                       : "stroke" );
   }
 
   private void drawArc( DrawArc operation ) {
@@ -219,14 +225,13 @@ final class GCOperationWriter {
     float offset = getOffset( operation.fill );
     float rx = operation.width / 2;
     float ry = operation.height / 2;
-    float cx = operation.x + rx + offset ;
+    float cx = operation.x + rx + offset;
     float cy = operation.y + ry + offset;
     float startAngle = round( operation.startAngle * factor * -1, 4 );
     float arcAngle = round( operation.arcAngle * factor * -1, 4 );
     addClientOperation( "save" );
     addClientOperation( "beginPath" );
-    operations.add( new JsonArray()
-      .add( "ellipse" )
+    operations.add( new JsonArray().add( "ellipse" )
       .add( cx )
       .add( cy )
       .add( rx )
@@ -234,13 +239,14 @@ final class GCOperationWriter {
       .add( 0 )
       .add( startAngle )
       .add( startAngle + arcAngle )
-      .add( arcAngle < 0 )
-    );
+      .add( arcAngle < 0 ) );
     if( operation.fill ) {
       addClientOperation( "lineTo", 0, 0 );
       addClientOperation( "closePath" );
     }
-    addClientOperation( operation.fill ? "fill" : "stroke" );
+    addClientOperation( operation.fill
+                                       ? "fill"
+                                       : "stroke" );
     addClientOperation( "restore" );
   }
 
@@ -258,7 +264,9 @@ final class GCOperationWriter {
     if( operation.close && points.length > 1 ) {
       addClientOperation( "lineTo", points[ 0 ] + offset, points[ 1 ] + offset );
     }
-    addClientOperation( operation.fill ? "fill" : "stroke" );
+    addClientOperation( operation.fill
+                                       ? "fill"
+                                       : "stroke" );
   }
 
   private void drawImage( DrawImage operation ) {
@@ -266,20 +274,17 @@ final class GCOperationWriter {
     if( operation.simple ) {
       addClientOperation( "drawImage", path, operation.destX, operation.destY );
     } else {
-      addClientOperation(
-        "drawImage",
-        path,
-        operation.srcX,
-        operation.srcY,
-        operation.srcWidth,
-        operation.srcHeight,
-        operation.destX,
-        operation.destY,
-        operation.destWidth,
-        operation.destHeight
-      );
+      addClientOperation( "drawImage",
+                          path,
+                          operation.srcX,
+                          operation.srcY,
+                          operation.srcWidth,
+                          operation.srcHeight,
+                          operation.destX,
+                          operation.destY,
+                          operation.destWidth,
+                          operation.destHeight );
     }
-
   }
 
   private void drawText( DrawText operation ) {
@@ -287,8 +292,9 @@ final class GCOperationWriter {
     boolean drawMnemonic = ( operation.flags & SWT.DRAW_MNEMONIC ) != 0;
     boolean drawDelemiter = ( operation.flags & SWT.DRAW_DELIMITER ) != 0;
     boolean drawTab = ( operation.flags & SWT.DRAW_TAB ) != 0;
-    operations.add( new JsonArray()
-      .add( fill ? "fillText" : "strokeText" )
+    operations.add( new JsonArray().add( fill
+                                              ? "fillText"
+                                              : "strokeText" )
       .add( operation.text )
       .add( drawMnemonic )
       .add( drawDelemiter )
@@ -299,7 +305,9 @@ final class GCOperationWriter {
 
   private void drawPath( DrawPath operation ) {
     renderPath( operation.types, operation.points );
-    addClientOperation( operation.fill ? "fill" : "stroke" );
+    addClientOperation( operation.fill
+                                       ? "fill"
+                                       : "stroke" );
   }
 
   private void setProperty( SetProperty operation ) {
@@ -325,7 +333,9 @@ final class GCOperationWriter {
       case SetProperty.LINE_WIDTH:
         name = "lineWidth";
         int width = ( ( Integer )operation.value ).intValue();
-        width = width < 1 ? 1 : width;
+        width = width < 1
+                          ? 1
+                          : width;
         value = JsonValue.valueOf( width );
         lineWidth = width;
       break;
@@ -350,13 +360,13 @@ final class GCOperationWriter {
           default:
           case SWT.JOIN_BEVEL:
             value = JsonValue.valueOf( "bevel" );
-            break;
+          break;
           case SWT.JOIN_MITER:
             value = JsonValue.valueOf( "miter" );
-            break;
+          break;
           case SWT.JOIN_ROUND:
             value = JsonValue.valueOf( "round" );
-            break;
+          break;
         }
       break;
       case SetProperty.FONT:
@@ -467,5 +477,4 @@ final class GCOperationWriter {
   static String getGcId( Widget widget ) {
     return getId( widget ) + ".gc";
   }
-
 }

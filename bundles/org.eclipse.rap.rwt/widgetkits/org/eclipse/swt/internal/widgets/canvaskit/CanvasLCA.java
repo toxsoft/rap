@@ -35,10 +35,12 @@ import org.eclipse.swt.widgets.Canvas;
 public final class CanvasLCA extends WidgetLCA<Canvas> {
 
   public static final CanvasLCA INSTANCE = new CanvasLCA();
-
   private static final String TYPE = "rwt.widgets.Canvas";
   private static final String TYPE_GC = "rwt.widgets.GC";
-  private static final String[] ALLOWED_STYLES = { "NO_RADIO_GROUP", "BORDER" };
+  private static final String[] ALLOWED_STYLES = {
+    "NO_RADIO_GROUP",
+    "BORDER"
+  };
   private static final String PROP_CLIENT_AREA = "clientArea";
 
   @Override
@@ -80,14 +82,24 @@ public final class CanvasLCA extends WidgetLCA<Canvas> {
     GCOperation[] operations = adapter.getTrimmedGCOperations();
     if( operations.length > 0 || adapter.getForceRedraw() ) {
       GCOperationWriter operationWriter = new GCOperationWriter( canvas );
-      operationWriter.initialize();
+      // 2021-04-18 mvk
+      boolean initEnabled = ( adapter.getNeedInit() );
+      operationWriter.initialize( initEnabled );
       for( int i = 0; i < operations.length; i++ ) {
         operationWriter.write( operations[ i ] );
       }
       operationWriter.render();
+// System.err.println( "CanvasLCA.writeGCOperations(...): getNeedInit() = "
+// + adapter.getNeedInit()
+// + ", getForceRedraw() = "
+// + adapter.getForceRedraw()
+// + ", getNeedInitDefault() = "
+// + adapter.getNeedInitDefault() );
     }
     adapter.clearGCOperations();
     adapter.setForceRedraw( false );
+    // 2021-04-24 mvk
+    adapter.setNeedInit( adapter.getNeedInitDefault() );
   }
 
   public static void renderClientArea( Canvas canvas ) {
@@ -97,5 +109,4 @@ public final class CanvasLCA extends WidgetLCA<Canvas> {
   private CanvasLCA() {
     // prevent instantiation
   }
-
 }

@@ -34,7 +34,9 @@ rwt.remote.HandlerRegistry.add( "rwt.widgets.GC", {
         properties.height,
         properties.font,
         properties.fillStyle,
-        properties.strokeStyle
+        properties.strokeStyle,
+        // 2021-04-24 mvk        
+        properties.redraw
       );
     },
     "draw" : function( gc, properties ) {

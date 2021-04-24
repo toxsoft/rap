@@ -72,7 +72,7 @@ public class GCOperationWriter_Test {
     canvas.setFont( new Font( display, "Arial", 12, SWT.BOLD ) );
 
     GCOperationWriter operationWriter = new GCOperationWriter( canvas );
-    operationWriter.initialize();
+    operationWriter.initialize( true );
 
     TestMessage message = Fixture.getProtocolMessage();
     CallOperation init = message.findCallOperation( getGcId( canvas ), "init" );

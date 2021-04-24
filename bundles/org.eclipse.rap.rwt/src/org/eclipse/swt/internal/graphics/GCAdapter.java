@@ -16,14 +16,19 @@ import java.util.List;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.internal.graphics.GCOperation.SetProperty;
 
+
 public final class GCAdapter {
 
   private final List<GCOperation> gcOperations;
   private boolean forceRedraw;
+  private boolean needInit;
+  private boolean needInitDefault;
   private Rectangle paintRect;
 
   public GCAdapter() {
     gcOperations = new LinkedList<>();
+    needInitDefault = true;
+    needInit = needInitDefault;
   }
 
   public void addGCOperation( GCOperation operation ) {
@@ -48,7 +53,7 @@ public final class GCAdapter {
       if( isDrawOperation( operations[ i ] ) ) {
         stop = true;
       } else {
-        counter++;
+        counter++ ;
       }
     }
     GCOperation[] result = new GCOperation[ operations.length - counter ];
@@ -56,12 +61,28 @@ public final class GCAdapter {
     return result;
   }
 
-  public void setForceRedraw( boolean forceRedraw ) {
-    this.forceRedraw = forceRedraw;
+  public void setForceRedraw( boolean aForceRedraw ) {
+    forceRedraw = aForceRedraw;
   }
 
   public boolean getForceRedraw() {
     return forceRedraw;
+  }
+
+  public void setNeedInit( boolean aNeedInit ) {
+    needInit = aNeedInit;
+  }
+
+  public void setNeedInitDefault( boolean aNeedInitDefault ) {
+    needInitDefault = aNeedInitDefault;
+  }
+
+  public boolean getNeedInit() {
+    return needInit;
+  }
+
+  public boolean getNeedInitDefault() {
+    return needInitDefault;
   }
 
   public void setPaintRect( Rectangle paintRect ) {
@@ -75,5 +96,4 @@ public final class GCAdapter {
   private static boolean isDrawOperation( GCOperation operation ) {
     return !( operation instanceof SetProperty );
   }
-
 }
