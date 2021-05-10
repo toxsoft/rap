@@ -89,17 +89,17 @@ public final class CanvasLCA extends WidgetLCA<Canvas> {
         operationWriter.write( operations[ i ] );
       }
       operationWriter.render();
-// System.err.println( "CanvasLCA.writeGCOperations(...): getNeedInit() = "
-// + adapter.getNeedInit()
-// + ", getForceRedraw() = "
-// + adapter.getForceRedraw()
-// + ", getNeedInitDefault() = "
-// + adapter.getNeedInitDefault() );
+      // System.err.println( "CanvasLCA.writeGCOperations(...): getNeedInit() = "
+      // + adapter.getNeedInit()
+      // + ", getForceRedraw() = "
+      // + adapter.getForceRedraw()
+      // + ", getNeedInitDefault() = "
+      // + adapter.getNeedInitDefault() );
+      // 2021-04-29 mvk
+      adapter.setNeedInit( adapter.getNeedInitDefault() );
     }
     adapter.clearGCOperations();
     adapter.setForceRedraw( false );
-    // 2021-04-24 mvk
-    adapter.setNeedInit( adapter.getNeedInitDefault() );
   }
 
   public static void renderClientArea( Canvas canvas ) {
